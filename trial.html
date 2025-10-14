@@ -49,28 +49,33 @@
         </div>
 
         <!-- Lessons list -->
-        <div class="row row-cols-1 row-cols-md-2 g-4">
-          <div v-for="lesson in sortedLessons" :key="lesson.id" class="col">
-            <div class="card h-100 border-info shadow-sm">
-              <div class="card-body">
-                <h5 class="card-title">
-                  <i :class="['fa-solid', lesson.icon]" class="me-2 text-info"></i>
-                  {{ lesson.subject }}
-                </h5>
-                <p class="card-text"><strong>Location:</strong> {{ lesson.location }}</p>
-                <p class="card-text"><strong>Price:</strong> £{{ lesson.price }}</p>
-                <p class="card-text"><strong>Spaces:</strong> {{ lesson.spaces }}</p>
-              </div>
-              <div class="card-footer bg-white border-top-0">
-                <button class="btn btn-primary w-100"
-                  :disabled="lesson.spaces === 0"
-                  @click="addToCart(lesson)">
-                  Add to Cart
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+  <div v-for="lesson in sortedLessons" :key="lesson.id" class="col">
+    <div class="card h-100 border-info shadow-sm">
+      
+      <!-- Lesson Image -->
+      <img :src="lesson.image" class="card-img-top" alt="Lesson Image" style="height: 200px; object-fit: cover;" />
+
+      <div class="card-body">
+        <h5 class="card-title">
+          <i :class="['fa-solid', lesson.icon]" class="me-2 text-info"></i>
+          {{ lesson.subject }}
+        </h5>
+        <p class="card-text"><strong>Location:</strong> {{ lesson.location }}</p>
+        <p class="card-text"><strong>Price:</strong> £{{ lesson.price }}</p>
+        <p class="card-text"><strong>Spaces:</strong> {{ lesson.spaces }}</p>
+      </div>
+
+      <div class="card-footer bg-white border-top-0">
+        <button class="btn btn-primary w-100"
+          :disabled="lesson.spaces === 0"
+          @click="addToCart(lesson)">
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
       </div>
     </section>
@@ -132,17 +137,33 @@
         sitename: "Brighter Minds",
         ssitename: "After School Enrichment for Curious Learners",
         lessons: [
-          { id: 1, subject: "Math", location: "London", price: 100, spaces: 5, icon: "fa-calculator" },
-          { id: 2, subject: "Biology", location: "Manchester", price: 80, spaces: 3, icon: "fa-dna" },
-          { id: 3, subject: "English", location: "Leeds", price: 90, spaces: 5, icon: "fa-book" },
-          { id: 4, subject: "Physics", location: "Bristol", price: 120, spaces: 4, icon: "fa-atom" },
-          { id: 5, subject: "Chemistry", location: "Birmingham", price: 110, spaces: 5, icon: "fa-flask" },
-          { id: 6, subject: "History", location: "Oxford", price: 70, spaces: 5, icon: "fa-landmark" },
-          { id: 7, subject: "Geography", location: "Cambridge", price: 75, spaces: 5, icon: "fa-globe" },
-          { id: 8, subject: "Art", location: "Liverpool", price: 60, spaces: 5, icon: "fa-paintbrush" },
-          { id: 9, subject: "Music", location: "Edinburgh", price: 85, spaces: 5, icon: "fa-music" },
-          { id: 10, subject: "Computer Science", location: "London", price: 130, spaces: 5, icon: "fa-laptop-code" },
-        ],
+  { id: 1, subject: "Robotics", location: "Kigali", price: 150, spaces: 5, icon: "fa-robot", image: "https://cdn-icons-png.flaticon.com/512/4712/4712032.png" },
+  { id: 2, subject: "Game Design", location: "Nairobi", price: 120, spaces: 5, icon: "fa-gamepad", image: "https://cdn-icons-png.flaticon.com/512/2864/2864190.png" },
+  { id: 3, subject: "Drama", location: "Accra", price: 90, spaces: 5, icon: "fa-masks-theater", image: "https://cdn-icons-png.flaticon.com/512/3075/3075977.png" },
+  { id: 4, subject: "Basketball", location: "Lagos", price: 100, spaces: 5, icon: "fa-basketball", image: "https://cdn-icons-png.flaticon.com/512/682/682055.png" },
+  { id: 5, subject: "Dance", location: "Kampala", price: 85, spaces: 5, icon: "fa-music", image: "https://cdn-icons-png.flaticon.com/512/2303/2303984.png" },
+  { id: 6, subject: "Creative Writing", location: "Gaborone", price: 70, spaces: 5, icon: "fa-pen-nib", image: "https://cdn-icons-png.flaticon.com/512/3135/3135768.png" },
+  { id: 7, subject: "Environment Club", location: "Harare", price: 60, spaces: 5, icon: "fa-leaf", image: "https://cdn-icons-png.flaticon.com/512/824/824811.png" },
+  { id: 8, subject: "Chess", location: "Abuja", price: 75, spaces: 5, icon: "fa-chess", image: "https://cdn-icons-png.flaticon.com/512/2779/2779780.png" },
+  { id: 9, subject: "Photography", location: "Addis Ababa", price: 95, spaces: 5, icon: "fa-camera-retro", image: "https://cdn-icons-png.flaticon.com/512/2922/2922018.png" },
+  { id: 10, subject: "Entrepreneurship", location: "Dakar", price: 130, spaces: 5, icon: "fa-briefcase", image: "https://cdn-icons-png.flaticon.com/512/3050/3050525.png" },
+  { id: 11, subject: "Public Speaking", location: "Dar es Salaam", price: 100, spaces: 5, icon: "fa-bullhorn", image: "https://cdn-icons-png.flaticon.com/512/535/535188.png" },
+  { id: 12, subject: "Gardening", location: "Bamako", price: 50, spaces: 5, icon: "fa-seedling", image: "https://cdn-icons-png.flaticon.com/512/1443/1443794.png" },
+  { id: 13, subject: "Cooking", location: "Lusaka", price: 80, spaces: 5, icon: "fa-utensils", image: "https://cdn-icons-png.flaticon.com/512/3515/3515387.png" },
+  { id: 14, subject: "Fashion Design", location: "Maputo", price: 110, spaces: 5, icon: "fa-scissors", image: "https://cdn-icons-png.flaticon.com/512/2920/2920187.png" },
+  { id: 15, subject: "Animal Care", location: "Monrovia", price: 70, spaces: 5, icon: "fa-paw", image: "https://cdn-icons-png.flaticon.com/512/616/616408.png" },
+  { id: 16, subject: "Yoga", location: "Nouakchott", price: 65, spaces: 5, icon: "fa-child", image: "https://cdn-icons-png.flaticon.com/512/3011/3011270.png" },
+  { id: 17, subject: "Crafts", location: "Freetown", price: 60, spaces: 5, icon: "fa-tools", image: "https://cdn-icons-png.flaticon.com/512/809/809957.png" },
+  { id: 18, subject: "Science Lab", location: "Port Harcourt", price: 140, spaces: 5, icon: "fa-flask", image: "https://cdn-icons-png.flaticon.com/512/2933/2933913.png" },
+  { id: 19, subject: "Music Band", location: "Johannesburg", price: 100, spaces: 5, icon: "fa-guitar", image: "https://cdn-icons-png.flaticon.com/512/2255/2255127.png" },
+  { id: 20, subject: "First Aid", location: "Kano", price: 95, spaces: 5, icon: "fa-kit-medical", image: "https://cdn-icons-png.flaticon.com/512/484/484167.png" },
+  { id: 21, subject: "3D Printing", location: "Zanzibar", price: 145, spaces: 5, icon: "fa-cube", image: "https://cdn-icons-png.flaticon.com/512/3852/3852650.png" },
+  { id: 22, subject: "Mobile App Design", location: "Windhoek", price: 135, spaces: 5, icon: "fa-mobile-screen-button", image: "https://cdn-icons-png.flaticon.com/512/888/888879.png" },
+  { id: 23, subject: "Football", location: "Juba", price: 90, spaces: 5, icon: "fa-futbol", image: "https://cdn-icons-png.flaticon.com/512/861/861512.png" },
+  { id: 24, subject: "Painting", location: "Ouagadougou", price: 70, spaces: 5, icon: "fa-paintbrush", image: "https://cdn-icons-png.flaticon.com/512/2232/2232688.png" },
+  { id: 25, subject: "Sculpting", location: "Bujumbura", price: 75, spaces: 5, icon: "fa-drafting-compass", image: "https://cdn-icons-png.flaticon.com/512/3616/3616755.png" }
+],
+ 
         cart: [],
         showCart: false,
         name: '',
