@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Lesson Booking App</title>
+  <title>BrightMinds</title>
   <!-- Basic styles -->
   <style>
     body {
@@ -48,7 +48,8 @@
   <div id="app">
     <!-- Header with site name and Cart button -->
     <header>
-      <h1>{{ sitename }}</h1>
+      <h1><b>{{ sitename }}</b></h1>
+      <h3><i>{{ ssitename }}</i></h3>
       <!-- Cart button: only enabled if cart has at least one item -->
       <button @click="toggleCart" :disabled="cart.length === 0">
         {{ cart.length }} 
@@ -126,7 +127,9 @@
     new Vue({
       el: '#app',
       data: {
-        sitename: "Lesson Booking",
+        sitename: "BrightMinds–  ",
+        ssitename: " After-School Enrichment for Curious Learners Unlocking Potential Beyond School Hours ",
+        
         // Example lessons data, 10+ items with 5+ spaces
         lessons: [
           { id: 1, subject: "Math", location: "London", price: 100, spaces: 5, icon: "fa-calculator" },
@@ -220,7 +223,7 @@
       }
     });
 
-    
+
   </script>
 </body>
 </html>
