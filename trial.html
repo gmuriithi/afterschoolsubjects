@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lesson Booking App</title>
+  <!-- Basic styles -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .lesson {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      margin-top: 5px;
+      cursor: pointer;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    input, select {
+      margin-right: 10px;
+      padding: 5px;
+    }
+    form input {
+      display: block;
+      margin: 10px 0;
+      padding: 7px;
+      width: 200px;
+    }
+  </style>
+  <!-- Font Awesome CDN (6.4.0) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Vue 2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Header with site name and Cart button -->
+    <header>
+      <h1>{{ sitename }}</h1>
+      <!-- Cart button: only enabled if cart has at least one item -->
+      <button @click="toggleCart" :disabled="cart.length === 0">
+        {{ cart.length }} 
+        <span class="fa-solid fa-cart-shopping"></span> Checkout
+      </button>
+    </header>
+
+    <!-- LESSONS PAGE -->
+    <section v-if="!showCart">
+      <!-- Search input -->
+      <input v-model="searchQuery" placeholder="Search lessons" @input="searchLessons" />
+
+      <!-- Sort selection -->
+      <select v-model="sortBy">
+        <option value="subject">Subject</option>
+        <option value="location">Location</option>
+        <option value="price">Price</option>
+        <option value="spaces">Spaces</option>
+      </select>
+
+      <!-- Sort order toggle -->
+      <button @click="sortOrder *= -1">
+        Sort: {{ sortOrder === 1 ? 'Asc' : 'Desc' }}
+      </button>
+
+      <!-- Lesson list using v-for -->
+      <div v-for="lesson in sortedLessons" :key="lesson.id" class="lesson">
+        <h2>{{ lesson.subject }}</h2>
+        <p>Location: {{ lesson.location }}</p>
+        <p>Price: £{{ lesson.price }}</p>
+        <p>Spaces: {{ lesson.spaces }}</p>
+        <!-- Font Awesome icon -->
+        <i :class="['fa-solid', lesson.icon]" style="margin-right: 8px;"></i>
+        <!-- Add to Cart button: visible but disabled if no spaces -->
+        <button :disabled="lesson.spaces === 0" @click="addToCart(lesson)">
+          Add to Cart
+        </button>
+      </div>
+    </section>
+
+    <!-- CART PAGE -->
+    <section v-else>
+      <h2>Shopping Cart</h2>
+
+      <!-- Show lessons added to cart -->
+      <div v-for="(item, index) in cart" :key="index">
+        <p>{{ item.subject }} - {{ item.location }}</p>
+        <!-- Remove button -->
+        <button @click="removeFromCart(item)">Remove</button>
+      </div>
+
+      <!-- Checkout form -->
+      <form @submit.prevent="checkout">
+        <input
+          v-model="name"
+          placeholder="Name (letters only)"
+          required
+          pattern="[A-Za-z\s]+"
+          title="Name must contain letters only"
+        />
+        <input
+          v-model="phone"
+          placeholder="Phone (numbers only)"
+          required
+          pattern="\d+"
+          title="Phone must contain numbers only"
+        />
+        <!-- Checkout button: enabled only if form is valid -->
+        <button :disabled="!validForm">Checkout</button>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        sitename: "Lesson Booking",
+        // Example lessons data, 10+ items with 5+ spaces
+        lessons: [
+          { id: 1, subject: "Math", location: "London", price: 100, spaces: 5, icon: "fa-calculator" },
+          { id: 2, subject: "Biology", location: "Manchester", price: 80, spaces: 3, icon: "fa-dna" },
+          { id: 3, subject: "English", location: "Leeds", price: 90, spaces: 5, icon: "fa-book" },
+          { id: 4, subject: "Physics", location: "Bristol", price: 120, spaces: 4, icon: "fa-atom" },
+          { id: 5, subject: "Chemistry", location: "Birmingham", price: 110, spaces: 5, icon: "fa-flask" },
+          { id: 6, subject: "History", location: "Oxford", price: 70, spaces: 5, icon: "fa-landmark" },
+          { id: 7, subject: "Geography", location: "Cambridge", price: 75, spaces: 5, icon: "fa-globe" },
+          { id: 8, subject: "Art", location: "Liverpool", price: 60, spaces: 5, icon: "fa-paintbrush" },
+          { id: 9, subject: "Music", location: "Edinburgh", price: 85, spaces: 5, icon: "fa-music" },
+          { id: 10, subject: "Computer Science", location: "London", price: 130, spaces: 5, icon: "fa-laptop-code" },
+        ],
+        cart: [], // Cart items
+        showCart: false, // Toggle lessons/cart page
+        name: '', // Checkout form name
+        phone: '', // Checkout form phone
+        sortBy: 'subject', // Sort attribute
+        sortOrder: 1, // 1 = ascending, -1 = descending
+        searchQuery: '', // Search input
+      },
+      computed: {
+        // Filter lessons by searchQuery, then sort by sortBy and sortOrder
+        sortedLessons() {
+          let filtered = this.lessons.filter(lesson => {
+            const term = this.searchQuery.toLowerCase();
+            return (
+              lesson.subject.toLowerCase().includes(term) ||
+              lesson.location.toLowerCase().includes(term) ||
+              lesson.price.toString().includes(term) ||
+              lesson.spaces.toString().includes(term)
+            );
+          });
+
+          return filtered.sort((a, b) => {
+            let x = a[this.sortBy];
+            let y = b[this.sortBy];
+
+            if (typeof x === 'string') {
+              x = x.toLowerCase();
+              y = y.toLowerCase();
+            }
+
+            return (x > y ? 1 : x < y ? -1 : 0) * this.sortOrder;
+          });
+        },
+
+        // Validate name (letters only) and phone (numbers only)
+        validForm() {
+          const nameValid = /^[A-Za-z\s]+$/.test(this.name);
+          const phoneValid = /^\d+$/.test(this.phone);
+          return nameValid && phoneValid && this.cart.length > 0;
+        }
+      },
+      methods: {
+        // Toggle between lessons list and cart view
+        toggleCart() {
+          this.showCart = !this.showCart;
+        },
+
+        // Add lesson to cart and reduce available spaces
+        addToCart(lesson) {
+          if (lesson.spaces > 0) {
+            this.cart.push(lesson);
+            lesson.spaces--;
+          }
+        },
+
+        // Remove lesson from cart and add back to spaces
+        removeFromCart(lesson) {
+          const index = this.cart.indexOf(lesson);
+          if (index !== -1) {
+            this.cart.splice(index, 1);
+            lesson.spaces++;
+          }
+        },
+
+        // Alert confirmation and clear cart and form
+        checkout() {
+          alert(`Order confirmed for ${this.name}. Thank you!`);
+          this.cart = [];
+          this.name = '';
+          this.phone = '';
+          this.showCart = false;
+        },
+
+        // This function reacts to search input but logic is handled by computed property
+        searchLessons() {
+          // No need to do anything here; searchQuery is reactive
+        }
+      }
+    });
+  </script>
+</body>
+</html>
