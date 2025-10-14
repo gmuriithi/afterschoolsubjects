@@ -3,134 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <title>Brighter Minds</title>
-  <!-- Basic styles -->
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .lesson {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    button {
-      margin-top: 5px;
-      cursor: pointer;
-    }
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.5;
-    }
-    input, select {
-      margin-right: 10px;
-      padding: 5px;
-    }
-    form input {
-      display: block;
-      margin: 10px 0;
-      padding: 7px;
-      width: 200px;
-    }
-  </style>
-  <!-- Font Awesome CDN (6.4.0) -->
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <!-- Vue 2 CDN -->
+
+  <!-- Vue 2 -->
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 </head>
 <body>
-  <div id="app">
-    <!-- Header with site name and Cart button -->
-    <header>
-      <h1><b>{{ sitename }}</b></h1>
-      <h3><i>{{ ssitename }}</i></h3>
-      <!-- Cart button: only enabled if cart has at least one item -->
-      <button @click="toggleCart" :disabled="cart.length === 0">
-        {{ cart.length }} 
-        <span class="fa-solid fa-cart-shopping"></span> Checkout
+  <div id="app" class="container mt-4">
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="fw-bold text-primary">{{ sitename }}</h1>
+        <p class="text-muted fst-italic">{{ ssitename }}</p>
+      </div>
+      <button class="btn btn-warning" @click="toggleCart" :disabled="cart.length === 0">
+        {{ cart.length }} <i class="fa-solid fa-cart-shopping ms-1"></i> Checkout
       </button>
     </header>
 
     <!-- LESSONS PAGE -->
-    <section v-if="!showCart">
-      <!-- Search input -->
-      <input v-model="searchQuery" placeholder="Search lessons" @input="searchLessons" />
+    <section v-if="!showCart" class="row justify-content-end">
+      <div class="col-lg-10">
 
-      <!-- Sort selection -->
-      <select v-model="sortBy">
-        <option value="subject">Subject</option>
-        <option value="location">Location</option>
-        <option value="price">Price</option>
-        <option value="spaces">Spaces</option>
-      </select>
+        <!-- Filters -->
+        <div class="d-flex flex-wrap mb-4 align-items-center">
+          <input v-model="searchQuery" @input="searchLessons"
+            type="text" placeholder="Search lessons"
+            class="form-control me-2 mb-2" style="max-width: 250px;" />
 
-      <!-- Sort order toggle -->
-      <button @click="sortOrder *= -1">
-        Sort: {{ sortOrder === 1 ? 'Asc' : 'Desc' }}
-      </button>
+          <select v-model="sortBy" class="form-select me-2 mb-2" style="width: 200px;">
+            <option value="subject">Subject</option>
+            <option value="location">Location</option>
+            <option value="price">Price</option>
+            <option value="spaces">Spaces</option>
+          </select>
 
-      <!-- Lesson list using v-for -->
-      <div v-for="lesson in sortedLessons" :key="lesson.id" class="lesson">
-        <h2>{{ lesson.subject }}</h2>
-        <p>Location: {{ lesson.location }}</p>
-        <p>Price: £{{ lesson.price }}</p>
-        <p>Spaces: {{ lesson.spaces }}</p>
-        <!-- Font Awesome icon -->
-        <i :class="['fa-solid', lesson.icon]" style="margin-right: 8px;"></i>
-        <!-- Add to Cart button: visible but disabled if no spaces -->
-        <button :disabled="lesson.spaces === 0" @click="addToCart(lesson)">
-          Add to Cart
-        </button>
+          <button class="btn btn-secondary mb-2" @click="sortOrder *= -1">
+            Sort: {{ sortOrder === 1 ? 'Asc' : 'Desc' }}
+          </button>
+        </div>
+
+        <!-- Lessons list -->
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+          <div v-for="lesson in sortedLessons" :key="lesson.id" class="col">
+            <div class="card h-100 border-info shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">
+                  <i :class="['fa-solid', lesson.icon]" class="me-2 text-info"></i>
+                  {{ lesson.subject }}
+                </h5>
+                <p class="card-text"><strong>Location:</strong> {{ lesson.location }}</p>
+                <p class="card-text"><strong>Price:</strong> £{{ lesson.price }}</p>
+                <p class="card-text"><strong>Spaces:</strong> {{ lesson.spaces }}</p>
+              </div>
+              <div class="card-footer bg-white border-top-0">
+                <button class="btn btn-primary w-100"
+                  :disabled="lesson.spaces === 0"
+                  @click="addToCart(lesson)">
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
     <!-- CART PAGE -->
-    <section v-else>
-      <h2>Shopping Cart</h2>
+    <section v-else class="mt-4">
+      <h2 class="mb-3">🛒 Shopping Cart</h2>
 
-      <!-- Show lessons added to cart -->
-      <div v-for="(item, index) in cart" :key="index">
-        <p>{{ item.subject }} - {{ item.location }}</p>
-        <!-- Remove button -->
-        <button @click="removeFromCart(item)">Remove</button>
+      <div v-if="cart.length > 0" class="list-group mb-4">
+        <div v-for="(item, index) in cart" :key="index"
+          class="list-group-item d-flex justify-content-between align-items-center">
+          {{ item.subject }} - {{ item.location }}
+          <button class="btn btn-sm btn-danger" @click="removeFromCart(item)">
+            Remove
+          </button>
+        </div>
       </div>
+      <div v-else class="alert alert-info">Your cart is empty.</div>
 
-      <!-- Checkout form -->
-      <form @submit.prevent="checkout">
-        <input
-          v-model="name"
-          placeholder="Name (letters only)"
-          required
-          pattern="[A-Za-z\s]+"
-          title="Name must contain letters only"
-        />
-        <input
-          v-model="phone"
-          placeholder="Phone (numbers only)"
-          required
-          pattern="\d+"
-          title="Phone must contain numbers only"
-        />
-        <!-- Checkout button: enabled only if form is valid -->
-        <button :disabled="!validForm">Checkout</button>
+      <!-- Checkout Form -->
+      <form @submit.prevent="checkout" class="bg-light p-4 rounded shadow-sm" style="max-width: 400px;">
+        <h4 class="mb-3">Checkout Form</h4>
+        <div class="mb-3">
+          <label class="form-label">Name</label>
+          <input
+            v-model="name"
+            type="text"
+            class="form-control"
+            placeholder="Letters only"
+            required
+            pattern="[A-Za-z\s]+"
+            title="Name must contain letters only"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Phone</label>
+          <input
+            v-model="phone"
+            type="text"
+            class="form-control"
+            placeholder="Numbers only"
+            required
+            pattern="\d+"
+            title="Phone must contain numbers only"
+          />
+        </div>
+        <button type="submit" class="btn btn-success w-100" :disabled="!validForm">
+          Confirm Order
+        </button>
       </form>
     </section>
   </div>
 
+  <!-- Vue App -->
   <script>
     new Vue({
       el: '#app',
       data: {
-        sitename: "Brighter Minds–  ",
-        ssitename: " After School Enrichment for Curious Learners Unlocking Potential Beyond School Hours ",
-        
-        // Example lessons data, 10+ items with 5+ spaces
+        sitename: "Brighter Minds",
+        ssitename: "After School Enrichment for Curious Learners",
         lessons: [
           { id: 1, subject: "Math", location: "London", price: 100, spaces: 5, icon: "fa-calculator" },
           { id: 2, subject: "Biology", location: "Manchester", price: 80, spaces: 3, icon: "fa-dna" },
@@ -143,16 +143,15 @@
           { id: 9, subject: "Music", location: "Edinburgh", price: 85, spaces: 5, icon: "fa-music" },
           { id: 10, subject: "Computer Science", location: "London", price: 130, spaces: 5, icon: "fa-laptop-code" },
         ],
-        cart: [], // Cart items
-        showCart: false, // Toggle lessons/cart page
-        name: '', // Checkout form name
-        phone: '', // Checkout form phone
-        sortBy: 'subject', // Sort attribute
-        sortOrder: 1, // 1 = ascending, -1 = descending
-        searchQuery: '', // Search input
+        cart: [],
+        showCart: false,
+        name: '',
+        phone: '',
+        sortBy: 'subject',
+        sortOrder: 1,
+        searchQuery: ''
       },
       computed: {
-        // Filter lessons by searchQuery, then sort by sortBy and sortOrder
         sortedLessons() {
           let filtered = this.lessons.filter(lesson => {
             const term = this.searchQuery.toLowerCase();
@@ -176,8 +175,6 @@
             return (x > y ? 1 : x < y ? -1 : 0) * this.sortOrder;
           });
         },
-
-        // Validate name (letters only) and phone (numbers only)
         validForm() {
           const nameValid = /^[A-Za-z\s]+$/.test(this.name);
           const phoneValid = /^\d+$/.test(this.phone);
@@ -185,20 +182,15 @@
         }
       },
       methods: {
-        // Toggle between lessons list and cart view
         toggleCart() {
           this.showCart = !this.showCart;
         },
-
-        // Add lesson to cart and reduce available spaces
         addToCart(lesson) {
           if (lesson.spaces > 0) {
             this.cart.push(lesson);
             lesson.spaces--;
           }
         },
-
-        // Remove lesson from cart and add back to spaces
         removeFromCart(lesson) {
           const index = this.cart.indexOf(lesson);
           if (index !== -1) {
@@ -206,8 +198,6 @@
             lesson.spaces++;
           }
         },
-
-        // Alert confirmation and clear cart and form
         checkout() {
           alert(`Order confirmed for ${this.name}. Thank you!`);
           this.cart = [];
@@ -215,15 +205,14 @@
           this.phone = '';
           this.showCart = false;
         },
-
-        // This function reacts to search input but logic is handled by computed property
         searchLessons() {
-          // No need to do anything here; searchQuery is reactive
+          // Reactive via computed
         }
       }
     });
-
-
   </script>
+
+  <!-- Bootstrap 5 JS (optional, for dropdowns, etc.) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
