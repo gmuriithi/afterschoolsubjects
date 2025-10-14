@@ -1,0 +1,55 @@
+<html>
+ <head>
+  <title>Vue.js Pet Depot</title>
+  <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+ <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/fontawesome/5.15.1/css/all.min.css'>
+
+</head>
+ <body>
+   <div id="app">
+  <header>
+ <h1>{{ sitename }}</h1>
+ <button>
+ <!-- 'cartItemCount' is used the same way as a data property. -->
+ {{ cartItemCount }}
+ <!-- add the cart icon -->
+ <span class="fa-solid fa-cart-shopping"></span> Checkout
+ </button>
+ </header>
+ <main>
+ <figure>
+ <img v-bind:src="product.image">
+ </figure>
+ <h2 v-text="product.title"></h2>
+ <p v-html="product.description"></p>
+ <p>Price: {{product.price}}</p>
+ <button v-on:click="addToCart">
+ Add to cart
+ </button>
+ </main>
+ </div>
+
+  <script type="text/javascript">
+   var webstore = new Vue({
+    el: '#app', // <=== Don't forget this comma
+     data: {
+ sitename: "Vue.js Pet Depot",
+ product: {
+ id: 1001,
+ title: "Cat Food, 25lb bag",
+ description: "A 25 pound bag of <b><em>irresistible</em></b>," + "organic goodness for your cat.",
+ price: 2000,
+ image: "product-fullsize.png",
+   },
+ cart: []
+ },
+ methods: {
+ addToCart: function () {
+ this.cart.push(this.product.id);
+ }
+ }
+ });
+
+  </script>
+ </body>
+ </html>

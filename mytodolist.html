@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue TodoList</title>
+  <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+</head>
+<body>
+  <div id="App">
+    <h1>My TodoList</h1>
+    <input type="text" v-model="newTask" placeholder="Enter task">
+    <button @click="addItem">Add</button>
+    <ul>
+      <li v-for="(task, index) in tasks" :key="index">{{ task }}</li>
+    </ul>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#App',
+      data: {
+        newTask: '',
+        tasks: []
+      },
+      methods: {
+        addItem() {
+          if (this.newTask.trim() !== '') {
+            this.tasks.push(this.newTask.trim());
+            this.newTask = '';
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
