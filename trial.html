@@ -81,19 +81,19 @@
     </section>
 
     <!-- CART PAGE -->
-    <section v-if class="mt-4">
+    <section v-else class="mt-4">
       <h2 class="mb-3">🛒 Shopping Cart</h2>
 
       <div v-if="cart.length > 0" class="list-group mb-4">
         <div v-for="(item, index) in cart" :key="index"
           class="list-group-item d-flex justify-content-between align-items-center">
-        {{lesson.image}} - {{ item.subject }} - {{ item.location }}
+          {{ item.subject }} - {{ item.location }}
           <button class="btn btn-sm btn-danger" @click="removeFromCart(item)">
             Remove
           </button>
         </div>
       </div>
-      <div v-if class="alert alert-info">Your cart is empty.</div>
+      <div v-else class="alert alert-info">Your cart is empty.</div>
 
       <!-- Checkout Form -->
       <form @submit.prevent="checkout" class="bg-light p-4 rounded shadow-sm" style="max-width: 400px;">
