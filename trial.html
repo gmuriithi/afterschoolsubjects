@@ -81,7 +81,6 @@
     <section v-else class="mt-4">
   <h2 class="mb-3">🛒 Shopping Cart</h2>
 
-  <!-- If there are items in the cart -->
   <div v-if="cart.length > 0" class="list-group mb-4">
     <div
       v-for="(item, index) in cart"
@@ -89,7 +88,7 @@
       class="list-group-item d-flex justify-content-between align-items-center"
     >
       <div class="d-flex align-items-center">
-        <!-- Display the image -->
+        <!-- Display image from Base64 -->
         <img
           :src="item.image"
           alt="Lesson Image"
@@ -97,9 +96,8 @@
           style="width: 60px; height: 60px; object-fit: cover;"
         />
         <div>
-          <h6 class="mb-1">{{ item.subject }}</h6>
-          <small class="text-muted">{{ item.location }}</small><br />
-          <small class="text-success fw-bold">Price: ${{ item.price }}</small>
+          <strong>{{ item.subject }}</strong><br />
+          <small class="text-muted">{{ item.location }}</small>
         </div>
       </div>
 
@@ -109,10 +107,10 @@
     </div>
   </div>
 
-  <!-- If cart is empty -->
   <div v-else class="alert alert-info">Your cart is empty.</div>
+</section>
 
-
+     
 <form @submit.prevent="checkout" class="bg-light p-4 rounded shadow-sm" style="max-width: 500px;">
   <h4 class="mb-3">Checkout Form</h4>
 
