@@ -81,53 +81,68 @@
     </section>
 
     <!-- CART PAGE -->
-    <section v-if class="mt-4">
-      <h2 class="mb-3">🛒 Shopping Cart</h2>
+<section v-if="showCart" class="mt-4">
+  <h2 class="mb-3">🛒 Shopping Cart</h2>
 
-      <div v-if="cart.length > 0" class="list-group mb-4">
-        <div v-for="(item, index) in cart" :key="index"
-          class="list-group-item d-flex justify-content-between align-items-center">
-        {{lesson.image}} - {{ item.subject }} - {{ item.location }}
-          <button class="btn btn-sm btn-danger" @click="removeFromCart(item)">
-            Remove
-          </button>
-        </div>
-      </div>
-      <div v-else class="alert alert-info">Your cart is empty.</div>
+  <div v-if="cart.length > 0" class="list-group mb-4">
+    <div
+      v-for="(item, index) in cart"
+      :key="index"
+      class="list-group-item d-flex justify-content-between align-items-center"
+    >
+      <!-- Display image -->
+      <img
+        :src="item.image"
+        alt="Lesson Image"
+        style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;"
+      />
+      <span>{{ item.subject }} - {{ item.location }}</span>
 
-      <!-- Checkout Form -->
-      <form @submit.prevent="checkout" class="bg-light p-4 rounded shadow-sm" style="max-width: 400px;">
-        <h4 class="mb-3">Checkout Form</h4>
-        <div class="mb-3">
-          <label class="form-label">Name</label>
-          <input
-            v-model="name"
-            type="text"
-            class="form-control"
-            placeholder="Letters only"
-            required
-            pattern="[A-Za-z\s]+"
-            title="Name must contain letters only"
-          />
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Phone</label>
-          <input
-            v-model="phone"
-            type="text"
-            class="form-control"
-            placeholder="Numbers only"
-            required
-            pattern="\d+"
-            title="Phone must contain numbers only"
-          />
-        </div>
-        <button type="submit" class="btn btn-success w-100" :disabled="!validForm">
-          Confirm Order
-        </button>
-      </form>
-    </section>
+      <button class="btn btn-sm btn-danger" @click="removeFromCart(item)">
+        Remove
+      </button>
+    </div>
   </div>
+
+  <div v-else class="alert alert-info">Your cart is empty.</div>
+
+  <!-- Checkout Form -->
+  <form
+    @submit.prevent="checkout"
+    class="bg-light p-4 rounded shadow-sm mt-4"
+    style="max-width: 400px;"
+  >
+    <h4 class="mb-3">Checkout Form</h4>
+    <div class="mb-3">
+      <label class="form-label">Name</label>
+      <input
+        v-model="name"
+        type="text"
+        class="form-control"
+        placeholder="Letters only"
+        required
+        pattern="[A-Za-z\s]+"
+        title="Name must contain letters only"
+      />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Phone</label>
+      <input
+        v-model="phone"
+        type="text"
+        class="form-control"
+        placeholder="Numbers only"
+        required
+        pattern="\d+"
+        title="Phone must contain numbers only"
+      />
+    </div>
+    <button type="submit" class="btn btn-success w-100" :disabled="!validForm">
+      Confirm Order
+    </button>
+  </form>
+</section>
+
 
   <!-- Vue App -->
   <script>
