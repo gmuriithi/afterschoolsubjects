@@ -4,18 +4,17 @@
   <meta charset="UTF-8" />
   <title>Brighter Minds</title>
 
-  <!-- Bootstrap 5 CSS -->
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-  <!-- Vue 2 -->
+
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 </head>
 <body>
   <div id="app" class="container mt-4">
-    <!-- Header -->
+   
     <header class="d-flex justify-content-between align-items-center mb-4">
       <div>
         <h1 class="fw-bold text-primary">{{ sitename }}</h1>
@@ -26,11 +25,11 @@
       </button>
     </header>
 
-    <!-- LESSONS PAGE -->
+    
     <section v-if="!showCart" class="row justify-content-end">
       <div class="col-lg-10">
 
-        <!-- Filters -->
+        
         <div class="d-flex flex-wrap mb-4 align-items-center">
           <input v-model="searchQuery" @input="searchLessons"
             type="text" placeholder="Search lessons"
@@ -43,17 +42,17 @@
             <option value="spaces">Spaces</option>
           </select>
 
+          
           <button class="btn btn-secondary mb-2" @click="sortOrder *= -1">
             Sort: {{ sortOrder === 1 ? 'Asc' : 'Desc' }}
           </button>
         </div>
 
-        <!-- Lessons list -->
+        
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
   <div v-for="lesson in sortedLessons" :key="lesson.id" class="col">
     <div class="card h-100 border-info shadow-sm">
-      
-      <!-- Lesson Image -->
+    
       <img :src="lesson.image" class="card-img-top" alt="Lesson Image" style="height: 200px; object-fit: cover;" />
 
       <div class="card-body">
@@ -79,15 +78,13 @@
 
       </div>
     </section>
-
-    <!-- CART PAGE -->
     <section v-else class="mt-4">
       <h2 class="mb-3">🛒 Shopping Cart</h2>
 
       <div v-if="cart.length > 0" class="list-group mb-4">
         <div v-for="(item, index) in cart" :key="index"
           class="list-group-item d-flex justify-content-between align-items-center">
-          {{ item.subject }} - {{ item.location }}
+          {{ item.image }} - {{ item.subject }} - {{ item.location }}  
           <button class="btn btn-sm btn-danger" @click="removeFromCart(item)">
             Remove
           </button>
@@ -95,41 +92,112 @@
       </div>
       <div v-else class="alert alert-info">Your cart is empty.</div>
 
-      <!-- Checkout Form -->
-      <form @submit.prevent="checkout" class="bg-light p-4 rounded shadow-sm" style="max-width: 400px;">
-        <h4 class="mb-3">Checkout Form</h4>
-        <div class="mb-3">
-          <label class="form-label">Name</label>
-          <input
-            v-model="name"
-            type="text"
-            class="form-control"
-            placeholder="Letters only"
-            required
-            pattern="[A-Za-z\s]+"
-            title="Name must contain letters only"
-          />
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Phone</label>
-          <input
-            v-model="phone"
-            type="text"
-            class="form-control"
-            placeholder="Numbers only"
-            required
-            pattern="\d+"
-            title="Phone must contain numbers only"
-          />
-        </div>
-        <button type="submit" class="btn btn-success w-100" :disabled="!validForm">
-          Confirm Order
-        </button>
-      </form>
-    </section>
+     
+<form @submit.prevent="checkout" class="bg-light p-4 rounded shadow-sm" style="max-width: 500px;">
+  <h4 class="mb-3">Checkout Form</h4>
+
+
+  <div class="mb-3">
+    <label class="form-label">Name</label>
+    <input
+      v-model="name"
+      type="text"
+      class="form-control"
+      placeholder="Letters only"
+      required
+      pattern="[A-Za-z\s]+"
+      title="Name must contain letters only"
+    />
   </div>
 
-  <!-- Vue App -->
+ 
+  <div class="mb-3">
+    <label class="form-label">Phone</label>
+    <input
+      v-model="phone"
+      type="text"
+      class="form-control"
+      placeholder="Numbers only"
+      required
+      pattern="\d+"
+      title="Phone must contain numbers only"
+    />
+  </div>
+
+  
+  <div class="mb-3">
+    <label class="form-label">Email</label>
+    <input
+      v-model="email"
+      type="email"
+      class="form-control"
+      placeholder="Enter your email"
+      required
+    />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Address</label>
+    <input
+      v-model="address"
+      type="text"
+      class="form-control"
+      placeholder="Your delivery or lesson address"
+      required
+    />
+  </div>
+
+ 
+  <div class="mb-3">
+    <label class="form-label">Lesson Type</label>
+    <select v-model="lessonType" class="form-select" required>
+      <option disabled value="">Select lesson type</option>
+      <option>Online</option>
+      <option>Physical</option>
+      <option>Hybrid</option>
+    </select>
+  </div>
+
+ 
+  <div class="mb-3">
+    <label class="form-label">Preferred Date</label>
+    <input v-model="date" type="date" class="form-control" required/>
+  </div>
+
+  
+  <div class="mb-3">
+    <label class="form-label">Time Slot</label>
+    <select v-model="timeSlot" class="form-select" required>
+      <option disabled value="">Select time slot</option>
+      <option>Morning</option>
+      <option>Afternoon</option>
+      <option>Evening</option>
+    </select>
+  </div>
+
+ 
+  <div class="mb-3">
+    <label class="form-label">Group Type</label>
+    <select v-model="groupType" class="form-select" required>
+      <option disabled value="">Select group type</option>
+      <option>Individual</option>
+      <option>Small Group</option>
+      <option>Large Group</option>
+    </select>
+  </div>
+
+ 
+  <div class="mb-3">
+    <label class="form-label">Extra Notes (Optional)</label>
+    <textarea v-model="notes" class="form-control" placeholder="Any special requests"></textarea>
+  </div>
+
+  <button type="submit" class="btn btn-success w-100" :disabled="!validForm">
+    Confirm Order
+  </button>
+</form>
+
+
   <script>
     new Vue({
       el: '#app',
@@ -227,13 +295,11 @@
           this.showCart = false;
         },
         searchLessons() {
-          // Reactive via computed
+          
         }
       }
     });
   </script>
-
-  <!-- Bootstrap 5 JS (optional, for dropdowns, etc.) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
