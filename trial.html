@@ -82,36 +82,18 @@
 
     <!-- CART PAGE -->
     <section v-else class="mt-4">
-  <h2 class="mb-3">🛒 Shopping Cart</h2>
+      <h2 class="mb-3">🛒 Shopping Cart</h2>
 
-  <div v-if="cart.length > 0" class="list-group mb-4">
-    <div
-      v-for="(item, index) in cart"
-      :key="index"
-      class="list-group-item d-flex justify-content-between align-items-center"
-    >
-      <div class="d-flex align-items-center">
-        <!-- Display image from Base64 -->
-        <img
-          :src="item.image"
-          alt="Lesson Image"
-          class="me-3 rounded"
-          style="width: 60px; height: 60px; object-fit: cover;"
-        />
-        <div>
-          <strong>{{ item.subject }}</strong><br />
-          <small class="text-muted">{{ item.location }}</small>
+      <div v-if="cart.length > 0" class="list-group mb-4">
+        <div v-for="(item, index) in cart" :key="index"
+          class="list-group-item d-flex justify-content-between align-items-center">
+          {{ item.image }} - {{ item.subject }} - {{ item.location }}
+          <button class="btn btn-sm btn-danger" @click="removeFromCart(item)">
+            Remove
+          </button>
         </div>
       </div>
-
-      <button class="btn btn-sm btn-danger" @click="removeFromCart(item)">
-        Remove
-      </button>
-    </div>
-  </div>
-
-  <div v-else class="alert alert-info">Your cart is empty.</div>
-</section>
+      <div v-else class="alert alert-info">Your cart is empty.</div>
 
       <!-- Checkout Form -->
       <form @submit.prevent="checkout" class="bg-light p-4 rounded shadow-sm" style="max-width: 400px;">
