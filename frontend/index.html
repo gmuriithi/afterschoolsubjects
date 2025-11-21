@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Brighter Minds Lessons</title>
+
+  <!-- Vue + Axios -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <!-- Simple Styling -->
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .lesson-card { 
+      border: 1px solid #ccc; padding: 10px; border-radius: 6px; margin-bottom: 10px;
+      max-width: 320px; display: inline-block; vertical-align: top; margin-right: 10px;
+    }
+    .lesson-img { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; }
+    button { padding: 7px 12px; margin-top: 5px; cursor: pointer; }
+    .cart-box { border: 1px solid #444; padding: 15px; border-radius: 6px; max-width: 500px; }
+    .btn { padding: 8px 12px; cursor: pointer; border: none; border-radius: 5px; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-warning { background: #ffc107; }
+    input { padding: 7px; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
+    h2 { margin-top: 0; }
+  </style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <h1>{{ sitename }}</h1>
+    <button class="btn btn-warning" @click="showCart = !showCart">
+      Cart ({{ cart.length }})
+    </button>
+  </header>
+
+  <!-- LESSONS PAGE -->
+  <section v-if="!showCart">
+    <h2>Available Lessons</h2>
+
+    <!-- Optional search/filter -->
+    <input v-model="searchQuery" placeholder="Search lessons..." @input="loadLessons" />
+
+    <div class="row">
+      <div v-for="lesson in filteredLessons" :key="lesson._id" class="lesson-card">
+        <img :src="lesson.image" class="lesson-img" alt="Lesson image" />
+
+        <h3>{{ lesson.subject }}</h3>
+        <p><strong>Location:</strong> {{ lesson.location }}</p>
+        <p><strong>Price:</strong> £{{ lesson.price }}</p>
+        <p><strong>Spaces:</strong> {{ lesson.spaces }}</p>
+
+        <button class="btn btn-primary"
+          :disabled="lesson.spaces === 0"
+          @click="addToCart(lesson)">
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CART PAGE -->
+  <section v-else>
+    <h2>Your Cart</h2>
+
+    <div class="cart-box">
+      <div v-for="item in cart" :key="item._id" class="cart-item">
+        <p>{{ item.subject }} — £{{ item.price }}</p>
+        <button class="btn btn-danger" @click="removeFromCart(item)">Remove</button>
+        <hr>
+      </div>
+
+      <h3>Total: £{{ cartTotal }}</h3>
+
+      <!-- CHECKOUT FORM -->
+      <h3>Checkout</h3>
+      <input v-model="name" placeholder="Your Name" /><br>
+      <input v-model="phone" placeholder="Phone Number" /><br>
+
+      <button class="btn btn-success"
+        :disabled="cart.length === 0 || !validForm"
+        @click="checkout">
+        Confirm Order
+      </button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const API_URL = "http://localhost:3030"; // Change to your deployed backend URL if needed
+
+new Vue({
+  el: "#app",
+
+  data: {
+    sitename: "Brighter Minds",
+    lessons: [],
+    cart: [],
+    showCart: false,
+    name: "",
+    phone: "",
+    searchQuery: ""
+  },
+
+  computed: {
+    cartTotal() {
+      return this.cart.reduce((total, item) => total + item.price, 0);
+    },
+
+    validForm() {
+      return this.name.trim() !== "" && /^[0-9]+$/.test(this.phone);
+    },
+
+    filteredLessons() {
+      if (!this.searchQuery) return this.lessons;
+      const q = this.searchQuery.toLowerCase();
+      return this.lessons.filter(l => l.subject.toLowerCase().includes(q));
+    }
+  },
+
+  methods: {
+    async loadLessons() {
+      try {
+        const res = await axios.get(`${API_URL}/lessons`);
+        this.lessons = res.data;
+      } catch (err) {
+        console.error('Error fetching lessons:', err);
+      }
+    },
+
+    async addToCart(lesson) {
+      if (lesson.spaces === 0) return;
+      this.cart.push(lesson);
+      lesson.spaces--;
+
+      try {
+        await axios.patch(`${API_URL}/lessons/${lesson._id}/spaces`, { change: -1 });
+      } catch (err) {
+        console.error('Error updating spaces:', err);
+      }
+    },
+
+    async removeFromCart(lesson) {
+      const index = this.cart.indexOf(lesson);
+      if (index !== -1) this.cart.splice(index, 1);
+      lesson.spaces++;
+
+      try {
+        await axios.patch(`${API_URL}/lessons/${lesson._id}/spaces`, { change: 1 });
+      } catch (err) {
+        console.error('Error updating spaces:', err);
+      }
+    },
+
+    checkout() {
+      alert(`Order confirmed for ${this.name}.\nThank you for your purchase!`);
+      this.cart = [];
+      this.name = "";
+      this.phone = "";
+      this.showCart = false;
+      this.loadLessons();
+    }
+  },
+
+  created() {
+    this.loadLessons();
+  }
+});
+</script>
+
+</body>
+</html>
