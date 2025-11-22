@@ -183,10 +183,11 @@ app.get("/", (req, res) => {
 
 // Fallback route for SPA
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "frontend", "trial.html"));
+  res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
 // ---------------- Start Server ----------------
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
