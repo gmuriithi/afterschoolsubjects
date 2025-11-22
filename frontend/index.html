@@ -4,40 +4,47 @@
   <meta charset="UTF-8">
   <title>Brighter Minds Lessons</title>
 
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <!-- Vue + Axios -->
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-  <!-- Simple Styling -->
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-    header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .lesson-card { 
-      border: 1px solid #ccc; padding: 10px; border-radius: 6px; margin-bottom: 10px;
-      max-width: 320px; display: inline-block; vertical-align: top; margin-right: 10px; background: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding-top: 20px;
     }
-    .lesson-img { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; }
-    button { padding: 7px 12px; margin-top: 5px; cursor: pointer; }
-    .cart-box { border: 1px solid #444; padding: 15px; border-radius: 6px; max-width: 500px; background: #fff; }
-    .btn { padding: 8px 12px; cursor: pointer; border: none; border-radius: 5px; }
-    .btn-primary { background: #007bff; color: white; }
-    .btn-danger { background: #dc3545; color: white; }
-    .btn-success { background: #28a745; color: white; }
-    .btn-warning { background: #ffc107; }
-    input { padding: 7px; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
-    h2 { margin-top: 0; }
-    .filters { margin-bottom: 15px; }
-    .filters input { width: calc(50% - 10px); display: inline-block; margin-right: 10px; }
+    header {
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 15px;
+    }
+    .lesson-card img {
+      height: 180px;
+      object-fit: cover;
+    }
+    .cart-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    }
+    .filters input {
+      margin-bottom: 15px;
+    }
   </style>
 </head>
-
 <body>
-<div id="app">
+<div id="app" class="container">
 
   <!-- HEADER -->
   <header>
-    <h1>{{ sitename }}</h1>
+    <h1 class="text-primary">{{ sitename }}</h1>
     <button class="btn btn-warning" @click="showCart = !showCart">
       Cart ({{ cart.length }})
     </button>
@@ -45,51 +52,57 @@
 
   <!-- LESSONS PAGE -->
   <section v-if="!showCart">
-    <h2>Available Lessons</h2>
+    <h2 class="mb-3">Available Lessons</h2>
 
     <!-- Filters -->
-    <div class="filters">
-      <input v-model="searchQuery" placeholder="Search by subject..." @input="loadLessons" />
-      <input v-model="locationQuery" placeholder="Filter by location..." @input="loadLessons" />
+    <div class="row filters mb-4">
+      <div class="col-md-6 mb-2">
+        <input v-model="searchQuery" type="text" class="form-control" placeholder="Search by subject..." @input="loadLessons" />
+      </div>
+      <div class="col-md-6 mb-2">
+        <input v-model="locationQuery" type="text" class="form-control" placeholder="Filter by location..." @input="loadLessons" />
+      </div>
     </div>
 
     <div class="row">
-      <div v-for="lesson in filteredLessons" :key="lesson._id" class="lesson-card">
-        <img :src="lesson.image" class="lesson-img" alt="Lesson image" />
-
-        <h3>{{ lesson.subject }}</h3>
-        <p><strong>Location:</strong> {{ lesson.location }}</p>
-        <p><strong>Price:</strong> £{{ lesson.price }}</p>
-        <p><strong>Spaces:</strong> {{ lesson.spaces }}</p>
-
-        <button class="btn btn-primary"
-          :disabled="lesson.spaces === 0"
-          @click="addToCart(lesson)">
-          Add to Cart
-        </button>
+      <div class="col-md-4 mb-4" v-for="lesson in filteredLessons" :key="lesson._id">
+        <div class="card h-100 shadow-sm lesson-card">
+          <img :src="lesson.image" class="card-img-top" alt="Lesson image">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">{{ lesson.subject }}</h5>
+            <p class="card-text mb-1"><strong>Location:</strong> {{ lesson.location }}</p>
+            <p class="card-text mb-1"><strong>Price:</strong> £{{ lesson.price }}</p>
+            <p class="card-text mb-3"><strong>Spaces:</strong> {{ lesson.spaces }}</p>
+            <button class="btn btn-primary mt-auto"
+              :disabled="lesson.spaces === 0"
+              @click="addToCart(lesson)">
+              Add to Cart
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- CART PAGE -->
   <section v-else>
-    <h2>Your Cart</h2>
+    <h2 class="mb-3">Your Cart</h2>
 
-    <div class="cart-box">
-      <div v-for="item in cart" :key="item._id" class="cart-item">
-        <p>{{ item.subject }} — £{{ item.price }}</p>
-        <button class="btn btn-danger" @click="removeFromCart(item)">Remove</button>
-        <hr>
+    <div class="cart-box mx-auto">
+      <div v-for="item in cart" :key="item._id" class="d-flex justify-content-between align-items-center mb-2">
+        <span>{{ item.subject }} — £{{ item.price }}</span>
+        <button class="btn btn-danger btn-sm" @click="removeFromCart(item)">Remove</button>
       </div>
 
-      <h3>Total: £{{ cartTotal }}</h3>
+      <hr>
+      <h4>Total: £{{ cartTotal }}</h4>
 
       <!-- CHECKOUT FORM -->
-      <h3>Checkout</h3>
-      <input v-model="name" placeholder="Your Name" /><br>
-      <input v-model="phone" placeholder="Phone Number" /><br>
+      <h5 class="mt-3">Checkout</h5>
+      <input v-model="name" type="text" class="form-control mb-2" placeholder="Your Name" />
+      <input v-model="phone" type="text" class="form-control mb-3" placeholder="Phone Number" />
 
-      <button class="btn btn-success"
+      <button class="btn btn-success w-100"
         :disabled="cart.length === 0 || !validForm"
         @click="checkout">
         Confirm Order
@@ -100,11 +113,10 @@
 </div>
 
 <script>
-const API_URL = "https://afterschoolsubjects-y6mr.onrender.com"; // live backend
+const API_URL = "https://afterschoolsubjects-y6mr.onrender.com";
 
 new Vue({
   el: "#app",
-
   data: {
     sitename: "Brighter Minds",
     lessons: [],
@@ -115,16 +127,13 @@ new Vue({
     searchQuery: "",
     locationQuery: ""
   },
-
   computed: {
     cartTotal() {
       return this.cart.reduce((total, item) => total + item.price, 0);
     },
-
     validForm() {
       return this.name.trim() !== "" && /^[0-9]+$/.test(this.phone);
     },
-
     filteredLessons() {
       return this.lessons.filter(l => {
         const matchSubject = !this.searchQuery || l.subject.toLowerCase().includes(this.searchQuery.toLowerCase());
@@ -133,7 +142,6 @@ new Vue({
       });
     }
   },
-
   methods: {
     async loadLessons() {
       try {
@@ -143,31 +151,22 @@ new Vue({
         console.error('Error fetching lessons:', err);
       }
     },
-
     async addToCart(lesson) {
       if (lesson.spaces === 0) return;
       this.cart.push(lesson);
       lesson.spaces--;
-
       try {
         await axios.patch(`${API_URL}/lessons/${lesson._id}/spaces`, { change: -1 });
-      } catch (err) {
-        console.error('Error updating spaces:', err);
-      }
+      } catch (err) { console.error(err); }
     },
-
     async removeFromCart(lesson) {
       const index = this.cart.indexOf(lesson);
       if (index !== -1) this.cart.splice(index, 1);
       lesson.spaces++;
-
       try {
         await axios.patch(`${API_URL}/lessons/${lesson._id}/spaces`, { change: 1 });
-      } catch (err) {
-        console.error('Error updating spaces:', err);
-      }
+      } catch (err) { console.error(err); }
     },
-
     checkout() {
       alert(`Order confirmed for ${this.name}.\nThank you for your purchase!`);
       this.cart = [];
@@ -177,12 +176,13 @@ new Vue({
       this.loadLessons();
     }
   },
-
   created() {
     this.loadLessons();
   }
 });
 </script>
 
+<!-- Bootstrap JS (optional for components) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
