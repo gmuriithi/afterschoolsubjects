@@ -10,15 +10,16 @@
 
   <!-- Simple Styling -->
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
     header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
     .lesson-card { 
       border: 1px solid #ccc; padding: 10px; border-radius: 6px; margin-bottom: 10px;
-      max-width: 320px; display: inline-block; vertical-align: top; margin-right: 10px;
+      max-width: 320px; display: inline-block; vertical-align: top; margin-right: 10px; background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .lesson-img { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; }
     button { padding: 7px 12px; margin-top: 5px; cursor: pointer; }
-    .cart-box { border: 1px solid #444; padding: 15px; border-radius: 6px; max-width: 500px; }
+    .cart-box { border: 1px solid #444; padding: 15px; border-radius: 6px; max-width: 500px; background: #fff; }
     .btn { padding: 8px 12px; cursor: pointer; border: none; border-radius: 5px; }
     .btn-primary { background: #007bff; color: white; }
     .btn-danger { background: #dc3545; color: white; }
@@ -26,6 +27,8 @@
     .btn-warning { background: #ffc107; }
     input { padding: 7px; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
     h2 { margin-top: 0; }
+    .filters { margin-bottom: 15px; }
+    .filters input { width: calc(50% - 10px); display: inline-block; margin-right: 10px; }
   </style>
 </head>
 
@@ -44,8 +47,11 @@
   <section v-if="!showCart">
     <h2>Available Lessons</h2>
 
-    <!-- Optional search/filter -->
-    <input v-model="searchQuery" placeholder="Search lessons..." @input="loadLessons" />
+    <!-- Filters -->
+    <div class="filters">
+      <input v-model="searchQuery" placeholder="Search by subject..." @input="loadLessons" />
+      <input v-model="locationQuery" placeholder="Filter by location..." @input="loadLessons" />
+    </div>
 
     <div class="row">
       <div v-for="lesson in filteredLessons" :key="lesson._id" class="lesson-card">
@@ -94,7 +100,7 @@
 </div>
 
 <script>
-const API_URL = "http://localhost:3030"; // Change to your deployed backend URL if needed
+const API_URL = "https://afterschoolsubjects-y6mr.onrender.com"; // live backend
 
 new Vue({
   el: "#app",
@@ -106,7 +112,8 @@ new Vue({
     showCart: false,
     name: "",
     phone: "",
-    searchQuery: ""
+    searchQuery: "",
+    locationQuery: ""
   },
 
   computed: {
@@ -119,9 +126,11 @@ new Vue({
     },
 
     filteredLessons() {
-      if (!this.searchQuery) return this.lessons;
-      const q = this.searchQuery.toLowerCase();
-      return this.lessons.filter(l => l.subject.toLowerCase().includes(q));
+      return this.lessons.filter(l => {
+        const matchSubject = !this.searchQuery || l.subject.toLowerCase().includes(this.searchQuery.toLowerCase());
+        const matchLocation = !this.locationQuery || l.location.toLowerCase().includes(this.locationQuery.toLowerCase());
+        return matchSubject && matchLocation;
+      });
     }
   },
 
