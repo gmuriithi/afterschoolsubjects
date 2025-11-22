@@ -176,13 +176,13 @@ app.get("/lessons/count", async (req, res) => {
 
 // ---------------- Frontend Routes ----------------
 
-// Serve index.html as homepage
+// Homepage
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
-// Catch-all fallback for SPA routing
-app.get("/*", (req, res) => {
+// Fallback route for SPA
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "trial.html"));
 });
 
