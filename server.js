@@ -11,7 +11,9 @@ const PORT = process.env.PORT || 3030;
 // ---------------- Middleware ----------------
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../frontend"))); // serve frontend
+
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, "frontend")));
 
 // ---------------- MongoDB Connection ----------------
 // Hardcode your Atlas URI here (replace <password> with real password)
@@ -173,20 +175,16 @@ app.get("/lessons/count", async (req, res) => {
 });
 
 // Serve index.html as homepage
-const path = require("path");
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
-
 // Catch-all fallback route
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/trial.html"));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "trial.html"));
 });
 
 // ---------------- Start Server ----------------
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-
