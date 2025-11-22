@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "frontend")));
 
 // ---------------- MongoDB Connection ----------------
-// Hardcode your Atlas URI here (replace <password> with real password)
+// Replace with your Atlas URI
 const uri = "mongodb+srv://gmuriithiwamwangi:Nyand2k27Grvn$$@cluster0.deepy.mongodb.net/?appName=Cluster0";
 const client = new MongoClient(uri);
 
@@ -174,12 +174,14 @@ app.get("/lessons/count", async (req, res) => {
   }
 });
 
+// ---------------- Frontend Routes ----------------
+
 // Serve index.html as homepage
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
-// Catch-all fallback route
+// Catch-all fallback for SPA routing
 app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "trial.html"));
 });
@@ -188,4 +190,3 @@ app.get("/*", (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
