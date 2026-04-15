@@ -5,43 +5,51 @@ const { MongoClient, ObjectId } = require("mongodb");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middleware
+// ---------------- MIDDLEWARE ----------------
 app.use(cors());
 app.use(express.json());
 
-// MongoDB
+// ---------------- MONGO DB ----------------
 const uri = "mongodb+srv://gmuriithiwamwangi:Nyand2k27Grvn$$@cluster0.deepy.mongodb.net/?retryWrites=true&w=majority";
 
 const client = new MongoClient(uri);
 
-let db, lessonsCollection, ordersCollection;
+let db;
+let lessonsCollection;
+let ordersCollection;
 
-// CONNECT DB
+// ---------------- CONNECT ----------------
 async function connectDB() {
   try {
     await client.connect();
-    db = client.db("brighter_minds");
 
+    db = client.db("brighter_minds");
     lessonsCollection = db.collection("lessons");
     ordersCollection = db.collection("orders");
 
-    console.log("✅ MongoDB Connected (brighter_minds)");
+    console.log("✅ Connected to MongoDB (brighter_minds)");
   } catch (err) {
-    console.error("❌ MongoDB Error:", err);
+    console.error("❌ MongoDB connection error:", err);
   }
 }
-
 connectDB();
 
-// ---------------- LESSONS ----------------
-
-// GET ALL LESSONS
-app.get("/lessons", async (req, res) => {
-  const lessons = await lessonsCollection.find().toArray();
-  res.json(lessons);
+// ---------------- ROOT TEST ----------------
+app.get("/", (req, res) => {
+  res.send("🚀 API Running");
 });
 
-// UPDATE SPACES
+// ---------------- GET LESSONS ----------------
+app.get("/lessons", async (req, res) => {
+  try {
+    const lessons = await lessonsCollection.find().toArray();
+    res.json(lessons);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------- UPDATE SPACES ----------------
 app.patch("/lessons/:id/spaces", async (req, res) => {
   try {
     const { change } = req.body;
@@ -58,14 +66,13 @@ app.patch("/lessons/:id/spaces", async (req, res) => {
   }
 });
 
-// ---------------- ORDERS ----------------
-
-// SAVE ORDER (FIXED)
+// ---------------- CREATE ORDER (FIXED) ----------------
 app.post("/orders", async (req, res) => {
   try {
+    console.log("📥 ORDER RECEIVED:", req.body);
+
     const { name, phone, cart } = req.body;
 
-    // validation
     if (!name || !phone || !cart || cart.length === 0) {
       return res.status(400).json({ error: "Invalid order data" });
     }
@@ -85,24 +92,30 @@ app.post("/orders", async (req, res) => {
 
     const result = await ordersCollection.insertOne(order);
 
+    console.log("✅ ORDER SAVED ID:", result.insertedId);
+
     res.json({
-      message: "Order saved successfully",
+      success: true,
       orderId: result.insertedId
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ ORDER ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET ORDERS (TEST)
+// ---------------- GET ORDERS ----------------
 app.get("/orders", async (req, res) => {
-  const orders = await ordersCollection.find().toArray();
-  res.json(orders);
+  try {
+    const orders = await ordersCollection.find().toArray();
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ---------------- START ----------------
+// ---------------- START SERVER ----------------
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
