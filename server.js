@@ -1,119 +1,108 @@
-// server.js
 const express = require("express");
-const { MongoClient, ObjectId } = require("mongodb");
 const cors = require("cors");
-const path = require("path");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const app = express();
+const PORT = process.env.PORT || 10000;
 
-// 🔹 Middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// 🔹 Logger middleware: Logs every request
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
-});
+// MongoDB
+const uri = "mongodb+srv://gmuriithiwamwangi:Nyand2k27Grvn$$@cluster0.deepy.mongodb.net/?retryWrites=true&w=majority";
 
-// 🔹 Static file middleware: Serve images from /images folder
-app.use("/images", express.static(path.join(__dirname, "images")));
-
-// 🔹 MongoDB Atlas connection (SRV string)
-const uri = "mongodb+srv://gmuriithiwamwangi_db_user:Nyand2k27Grvn@cluster0.ql0owo1.mongodb.net/afterschool?retryWrites=true&w=majority";
 const client = new MongoClient(uri);
 
-let db;
+let db, lessonsCollection, ordersCollection;
 
-// 🔹 Connect to MongoDB
+// CONNECT DB
 async function connectDB() {
-    try {
-        await client.connect();
-        db = client.db("afterschool");
-        console.log("✅ MongoDB Connected");
-    } catch (err) {
-        console.error("❌ Connection Error:", err);
-    }
+  try {
+    await client.connect();
+    db = client.db("brighter_minds");
+
+    lessonsCollection = db.collection("lessons");
+    ordersCollection = db.collection("orders");
+
+    console.log("✅ MongoDB Connected (brighter_minds)");
+  } catch (err) {
+    console.error("❌ MongoDB Error:", err);
+  }
 }
+
 connectDB();
 
-// 🔹 TEST ROUTE
-app.get("/test", async (req, res) => {
-    res.send("Backend working!");
-});
+// ---------------- LESSONS ----------------
 
-// 🔹 GET /lessons - Return all lessons
+// GET ALL LESSONS
 app.get("/lessons", async (req, res) => {
-    try {
-        const lessons = await db.collection("lessons").find().toArray();
-        res.json(lessons);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  const lessons = await lessonsCollection.find().toArray();
+  res.json(lessons);
 });
 
-// 🔹 POST /orders - Save an order
+// UPDATE SPACES
+app.patch("/lessons/:id/spaces", async (req, res) => {
+  try {
+    const { change } = req.body;
+
+    const result = await lessonsCollection.findOneAndUpdate(
+      { _id: new ObjectId(req.params.id) },
+      { $inc: { spaces: Number(change) } },
+      { returnDocument: "after" }
+    );
+
+    res.json(result.value);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------- ORDERS ----------------
+
+// SAVE ORDER (FIXED)
 app.post("/orders", async (req, res) => {
-    try {
-        const { name, phone, lessonIDs, spaces } = req.body;
+  try {
+    const { name, phone, cart } = req.body;
 
-        // Validate required fields
-        if (!name || !phone || !lessonIDs || !spaces) {
-            return res.status(400).json({ error: "Missing required fields" });
-        }
-
-        const order = { name, phone, lessonIDs, spaces, createdAt: new Date() };
-        await db.collection("orders").insertOne(order);
-        res.json({ message: "Order saved!", order });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    // validation
+    if (!name || !phone || !cart || cart.length === 0) {
+      return res.status(400).json({ error: "Invalid order data" });
     }
+
+    const order = {
+      name,
+      phone,
+      items: cart.map(item => ({
+        lessonId: item._id,
+        subject: item.subject,
+        price: item.price,
+        quantity: item.quantity || 1
+      })),
+      total: cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0),
+      createdAt: new Date()
+    };
+
+    const result = await ordersCollection.insertOne(order);
+
+    res.json({
+      message: "Order saved successfully",
+      orderId: result.insertedId
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// 🔹 PUT /lessons/:id - Update any lesson field
-app.put("/lessons/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updateData = req.body;
-
-        const result = await db.collection("lessons").updateOne(
-            { _id: new ObjectId(id) },
-            { $set: updateData }
-        );
-
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: "Lesson not found" });
-        }
-
-        res.json({ message: "Lesson updated!" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+// GET ORDERS (TEST)
+app.get("/orders", async (req, res) => {
+  const orders = await ordersCollection.find().toArray();
+  res.json(orders);
 });
 
-// 🔹 SEARCH /search?q=keyword - Search across topic, location, price, space
-app.get("/search", async (req, res) => {
-    try {
-        const q = req.query.q;
-        if (!q) return res.json([]);
-
-        const lessons = await db.collection("lessons").find({
-            $or: [
-                { topic: { $regex: q, $options: "i" } },
-                { location: { $regex: q, $options: "i" } },
-                { price: { $regex: q, $options: "i" } },
-                { space: { $regex: q, $options: "i" } }
-            ]
-        }).toArray();
-
-        res.json(lessons);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// 🚀 Start server
-const PORT = process.env.PORT || 3000;
+// ---------------- START ----------------
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
