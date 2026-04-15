@@ -1,209 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Brighter Minds Lessons</title>
+<meta charset="UTF-8">
+<title>After School Lessons</title>
 
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-  <!-- Vue + Axios -->
-  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-  <style>
-    body {
-      font-family: Arial;
-      background: #f2f2f2;
-      padding-top: 20px;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-
-    .lesson-card img {
-      height: 180px;
-      object-fit: cover;
-    }
-
-    .cart-box {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-    }
-  </style>
+<style>
+body { background:#f5f5f5; }
+.card img { height:180px; object-fit:cover; }
+</style>
 </head>
 
 <body>
 
-<div id="app" class="container">
+<div id="app" class="container py-4">
 
-  <!-- HEADER -->
-  <header>
-    <h2>{{ sitename }}</h2>
-    <button class="btn btn-warning" @click="showCart = !showCart">
-      Cart ({{ cart.length }})
-    </button>
-  </header>
+<h2 class="text-primary">After School Lessons</h2>
 
-  <!-- LESSONS -->
-  <div v-if="!showCart">
-    <div class="row">
+<button class="btn btn-dark mb-3" @click="toggleCart">
+Cart ({{ cart.length }})
+</button>
 
-      <div class="col-md-4 mb-3" v-for="lesson in lessons" :key="lesson._id">
+<!-- LESSONS -->
+<div v-if="!showCart" class="row">
+  <div class="col-md-4 mb-3" v-for="lesson in lessons" :key="lesson._id">
+    <div class="card">
+      <img :src="lesson.image">
+      <div class="card-body">
+        <h5>{{ lesson.subject }}</h5>
+        <p>{{ lesson.location }}</p>
+        <p>£{{ lesson.price }}</p>
+        <p>Spaces: {{ lesson.spaces }}</p>
 
-        <div class="card lesson-card">
-          <img :src="lesson.image" class="card-img-top">
-
-          <div class="card-body">
-            <h5>{{ lesson.subject }}</h5>
-            <p>£{{ lesson.price }}</p>
-            <p>Spaces: {{ lesson.spaces }}</p>
-
-            <button class="btn btn-primary"
-              :disabled="lesson.spaces === 0"
-              @click="addToCart(lesson)">
-              Add to Cart
-            </button>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-  </div>
-
-  <!-- CART -->
-  <div v-else>
-
-    <div class="cart-box">
-
-      <div v-for="item in cart" :key="item._id" class="d-flex justify-content-between mb-2">
-        <span>{{ item.subject }} - £{{ item.price }}</span>
-
-        <button class="btn btn-danger btn-sm" @click="removeFromCart(item)">
-          X
+        <button class="btn btn-primary"
+          :disabled="lesson.spaces === 0"
+          @click="addToCart(lesson)">
+          Add to Cart
         </button>
       </div>
-
-      <hr>
-
-      <h4>Total: £{{ cartTotal }}</h4>
-
-      <input v-model="name" class="form-control mb-2" placeholder="Your Name">
-      <input v-model="phone" class="form-control mb-2" placeholder="Phone Number">
-
-      <button class="btn btn-success w-100"
-        :disabled="cart.length === 0 || !validForm"
-        @click="checkout">
-        Confirm Order
-      </button>
-
     </div>
-
   </div>
+</div>
+
+<!-- CART -->
+<div v-else>
+  <h3>Cart</h3>
+
+  <div v-for="item in cart" :key="item._id">
+    {{ item.subject }} - £{{ item.price }}
+    <button class="btn btn-sm btn-danger" @click="remove(item)">X</button>
+  </div>
+
+  <hr>
+
+  <input v-model="name" class="form-control mb-2" placeholder="Name">
+  <input v-model="phone" class="form-control mb-2" placeholder="Phone">
+
+  <button class="btn btn-success w-100" @click="checkout">
+    Checkout
+  </button>
+</div>
 
 </div>
 
 <script>
+const API = "https://school-dkny.onrender.com";
 
-const API_URL = "https://school-dkny.onrender.com";
-
-new Vue({
-  el: "#app",
-
-  data: {
-    sitename: "Brighter Minds",
+Vue.createApp({
+data() {
+  return {
     lessons: [],
     cart: [],
     showCart: false,
     name: "",
     phone: ""
-  },
+  };
+},
 
-  computed: {
-    cartTotal() {
-      return this.cart.reduce((t, i) => t + i.price, 0);
-    },
+methods: {
 
-    validForm() {
-      return this.name.trim() !== "" && /^[0-9]+$/.test(this.phone);
-    }
-  },
+async loadLessons() {
+  const res = await fetch(API + "/lessons");
+  this.lessons = await res.json();
+},
 
-  methods: {
+toggleCart() {
+  this.showCart = !this.showCart;
+},
 
-    // LOAD LESSONS
-    async loadLessons() {
-      const res = await axios.get(`${API_URL}/lessons`);
-      this.lessons = res.data;
-    },
+addToCart(lesson) {
+  this.cart.push({ ...lesson, quantity: 1 });
+  lesson.spaces--;
+},
 
-    // ADD TO CART
-    async addToCart(lesson) {
-      this.cart.push(lesson);
-      lesson.spaces--;
+remove(item) {
+  this.cart = this.cart.filter(i => i._id !== item._id);
+},
 
-      await axios.patch(`${API_URL}/lessons/${lesson._id}/spaces`, {
-        change: -1
-      });
-    },
+async checkout() {
+  try {
+    const res = await fetch(API + "/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: this.name,
+        phone: this.phone,
+        cart: this.cart
+      })
+    });
 
-    // REMOVE FROM CART
-    async removeFromCart(lesson) {
-      const i = this.cart.indexOf(lesson);
-      this.cart.splice(i, 1);
+    const data = await res.json();
 
-      lesson.spaces++;
+    if (!res.ok) throw new Error(data.error);
 
-      await axios.patch(`${API_URL}/lessons/${lesson._id}/spaces`, {
-        change: 1
-      });
-    },
+    alert("✅ Order saved successfully!");
 
-    // ✅ CHECKOUT (FIXED + WORKING)
-    async checkout() {
-      try {
+    this.cart = [];
+    this.name = "";
+    this.phone = "";
+    this.showCart = false;
 
-        const cleanCart = this.cart.map(i => ({
-          _id: i._id,
-          subject: i.subject,
-          price: i.price
-        }));
-
-        const res = await axios.post(`${API_URL}/orders`, {
-          name: this.name,
-          phone: this.phone,
-          cart: cleanCart
-        });
-
-        alert("Order saved successfully ✅");
-
-        this.cart = [];
-        this.name = "";
-        this.phone = "";
-        this.showCart = false;
-
-        this.loadLessons();
-
-      } catch (err) {
-        console.log(err);
-        alert("Order failed ❌");
-      }
-    }
-
-  },
-
-  created() {
     this.loadLessons();
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Order failed");
   }
+}
 
-});
+},
 
+mounted() {
+  this.loadLessons();
+}
+
+}).mount("#app");
 </script>
 
 </body>
