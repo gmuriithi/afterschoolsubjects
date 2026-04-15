@@ -6,109 +6,91 @@ const { MongoClient, ObjectId } = require("mongodb");
 const app = express();
 const PORT = process.env.PORT || 3030;
 
-// ---------------- Middleware ----------------
-app.use(cors());
+// ---------------- FIXED CORS (IMPORTANT) ----------------
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"]
+}));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "frontend")));
 
-// ---------------- MongoDB ----------------
+// ---------------- DB ----------------
 const uri = "mongodb+srv://gmuriithiwamwangi:Nyand2k27Grvn$$@cluster0.deepy.mongodb.net/?appName=Cluster0";
 const client = new MongoClient(uri);
 
 let lessonsCollection;
 let ordersCollection;
 
-// ---------------- CONNECT DB ----------------
 async function connectDB() {
-  try {
-    await client.connect();
-    const db = client.db("brighter_minds");
+  await client.connect();
+  const db = client.db("brighter_minds");
 
-    lessonsCollection = db.collection("lessons");
-    ordersCollection = db.collection("orders");
+  lessonsCollection = db.collection("lessons");
+  ordersCollection = db.collection("orders");
 
-    console.log("✅ MongoDB Connected");
-  } catch (err) {
-    console.error("❌ DB Error:", err);
-  }
+  console.log("✅ MongoDB Connected");
 }
 connectDB();
 
 // ---------------- LESSONS ----------------
-
-// GET ALL LESSONS
 app.get("/lessons", async (req, res) => {
-  try {
-    const lessons = await lessonsCollection.find().toArray();
-    res.json(lessons);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  const lessons = await lessonsCollection.find().toArray();
+  res.json(lessons);
 });
 
-// UPDATE SPACES
 app.patch("/lessons/:id/spaces", async (req, res) => {
-  try {
-    const { change } = req.body;
+  const { change } = req.body;
 
-    const result = await lessonsCollection.findOneAndUpdate(
-      { _id: new ObjectId(req.params.id) },
-      { $inc: { spaces: Number(change) } },
-      { returnDocument: "after" }
-    );
+  const result = await lessonsCollection.findOneAndUpdate(
+    { _id: new ObjectId(req.params.id) },
+    { $inc: { spaces: Number(change) } },
+    { returnDocument: "after" }
+  );
 
-    res.json(result.value);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  res.json(result.value);
 });
 
 // ---------------- ORDERS ----------------
-
-// CREATE ORDER (THIS FIXES EVERYTHING)
 app.post("/orders", async (req, res) => {
   try {
+    console.log("ORDER RECEIVED:", req.body);
+
     const { name, phone, cart } = req.body;
 
     if (!name || !phone || !cart || cart.length === 0) {
       return res.status(400).json({ message: "Invalid order" });
     }
 
-    const cleanCart = cart.map(item => ({
-      lessonId: item._id,
-      subject: item.subject,
-      price: item.price
-    }));
-
     const order = {
       name,
       phone,
-      items: cleanCart,
-      total: cleanCart.reduce((sum, i) => sum + i.price, 0),
+      items: cart.map(i => ({
+        lessonId: i._id,
+        subject: i.subject,
+        price: i.price
+      })),
+      total: cart.reduce((s, i) => s + i.price, 0),
       createdAt: new Date()
     };
 
     const result = await ordersCollection.insertOne(order);
 
     res.json({
-      message: "Order saved successfully",
+      message: "Order saved",
       orderId: result.insertedId
     });
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// GET ORDERS (CHECK DATABASE)
+// GET ORDERS
 app.get("/orders", async (req, res) => {
-  try {
-    const orders = await ordersCollection.find().toArray();
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  const orders = await ordersCollection.find().toArray();
+  res.json(orders);
 });
 
 // ---------------- FRONTEND ----------------
@@ -120,7 +102,6 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
-// ---------------- START ----------------
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log("🚀 Server running on port", PORT);
 });
