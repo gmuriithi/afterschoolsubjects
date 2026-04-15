@@ -1,5 +1,3 @@
-// server.js - FINAL UPGRADED VERSION (LESSONS + CART + ORDERS)
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -11,8 +9,6 @@ const PORT = process.env.PORT || 3030;
 // ---------------- Middleware ----------------
 app.use(cors());
 app.use(express.json());
-
-// Serve frontend
 app.use(express.static(path.join(__dirname, "frontend")));
 
 // ---------------- MongoDB ----------------
@@ -22,7 +18,7 @@ const client = new MongoClient(uri);
 let lessonsCollection;
 let ordersCollection;
 
-// ---------------- DB CONNECT ----------------
+// ---------------- CONNECT DB ----------------
 async function connectDB() {
   try {
     await client.connect();
@@ -50,21 +46,6 @@ app.get("/lessons", async (req, res) => {
   }
 });
 
-// GET SINGLE LESSON
-app.get("/lessons/:id", async (req, res) => {
-  try {
-    const lesson = await lessonsCollection.findOne({
-      _id: new ObjectId(req.params.id)
-    });
-
-    if (!lesson) return res.status(404).json({ message: "Not found" });
-
-    res.json(lesson);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 // UPDATE SPACES
 app.patch("/lessons/:id/spaces", async (req, res) => {
   try {
@@ -84,32 +65,33 @@ app.patch("/lessons/:id/spaces", async (req, res) => {
 
 // ---------------- ORDERS ----------------
 
-// CREATE ORDER (MAIN FIX)
+// CREATE ORDER (THIS FIXES EVERYTHING)
 app.post("/orders", async (req, res) => {
   try {
     const { name, phone, cart } = req.body;
 
     if (!name || !phone || !cart || cart.length === 0) {
-      return res.status(400).json({ message: "Invalid order data" });
+      return res.status(400).json({ message: "Invalid order" });
     }
 
-    // Build order
+    const cleanCart = cart.map(item => ({
+      lessonId: item._id,
+      subject: item.subject,
+      price: item.price
+    }));
+
     const order = {
       name,
       phone,
-      items: cart.map(item => ({
-        lessonId: item._id,
-        subject: item.subject,
-        price: item.price
-      })),
-      total: cart.reduce((sum, item) => sum + item.price, 0),
+      items: cleanCart,
+      total: cleanCart.reduce((sum, i) => sum + i.price, 0),
       createdAt: new Date()
     };
 
     const result = await ordersCollection.insertOne(order);
 
     res.json({
-      message: "✅ Order saved successfully",
+      message: "Order saved successfully",
       orderId: result.insertedId
     });
 
@@ -119,7 +101,7 @@ app.post("/orders", async (req, res) => {
   }
 });
 
-// GET ORDERS (ADMIN TEST)
+// GET ORDERS (CHECK DATABASE)
 app.get("/orders", async (req, res) => {
   try {
     const orders = await ordersCollection.find().toArray();
