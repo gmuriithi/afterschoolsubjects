@@ -1,4 +1,4 @@
-// server.js - FINAL (Lessons + Orders working with your frontend)
+// server.js old - Full-featured Lessons API + Static Frontend Support
 
 const express = require("express");
 const cors = require("cors");
@@ -11,119 +11,182 @@ const PORT = process.env.PORT || 3030;
 // ---------------- Middleware ----------------
 app.use(cors());
 app.use(express.json());
+
+// Serve frontend static files
 app.use(express.static(path.join(__dirname, "frontend")));
 
-// ---------------- MongoDB ----------------
+// ---------------- MongoDB Connection ----------------
+// Replace with your Atlas URI
 const uri = "mongodb+srv://gmuriithiwamwangi:Nyand2k27Grvn$$@cluster0.deepy.mongodb.net/?appName=Cluster0";
 const client = new MongoClient(uri);
 
 let lessonsCollection;
-let ordersCollection;
 
 async function connectDB() {
   try {
     await client.connect();
-    const db = client.db("brighter_minds");
-
+    const db = client.db("brighter_minds"); // match your seed.js DB name
     lessonsCollection = db.collection("lessons");
-    ordersCollection = db.collection("orders");
-
-    console.log("✅ MongoDB Connected");
+    console.log("✅ Connected to MongoDB Atlas!");
   } catch (err) {
-    console.error("❌ DB Error:", err);
+    console.error("❌ MongoDB Error:", err);
+    process.exit(1);
   }
 }
 connectDB();
 
-// ---------------- LESSONS ----------------
+// ---------------- CRUD ROUTES ----------------
 
-// GET all lessons
+// GET /lessons - supports search, sort, pagination
 app.get("/lessons", async (req, res) => {
   try {
-    const lessons = await lessonsCollection.find().toArray();
+    const { search, sortBy, order = "asc", page = 1, limit = 50 } = req.query;
+
+    let query = {};
+    if (search) query.subject = { $regex: search, $options: "i" };
+
+    const sortOptions = sortBy
+      ? { [sortBy]: order === "desc" ? -1 : 1 }
+      : {};
+
+    const skip = (page - 1) * limit;
+
+    const lessons = await lessonsCollection
+      .find(query)
+      .sort(sortOptions)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit))
+      .toArray();
+
     res.json(lessons);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// UPDATE spaces
+// GET /lessons/:id
+app.get("/lessons/:id", async (req, res) => {
+  try {
+    const lesson = await lessonsCollection.findOne({
+      _id: new ObjectId(req.params.id),
+    });
+    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+    res.json(lesson);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /lessons
+app.post("/lessons", async (req, res) => {
+  try {
+    const result = await lessonsCollection.insertOne(req.body);
+    res.json({ message: "Lesson created", id: result.insertedId });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /lessons/:id
+app.put("/lessons/:id", async (req, res) => {
+  try {
+    const result = await lessonsCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: req.body }
+    );
+    if (result.matchedCount === 0)
+      return res.status(404).json({ message: "Lesson not found" });
+    res.json({ message: "Lesson updated" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /lessons/:id
+app.delete("/lessons/:id", async (req, res) => {
+  try {
+    const result = await lessonsCollection.deleteOne({
+      _id: new ObjectId(req.params.id),
+    });
+    if (result.deletedCount === 0)
+      return res.status(404).json({ message: "Lesson not found" });
+    res.json({ message: "Lesson deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PATCH /lessons/:id/spaces (increment/decrement spaces)
 app.patch("/lessons/:id/spaces", async (req, res) => {
   try {
     const { change } = req.body;
-
     const result = await lessonsCollection.findOneAndUpdate(
       { _id: new ObjectId(req.params.id) },
       { $inc: { spaces: Number(change) } },
       { returnDocument: "after" }
     );
-
     if (!result.value)
       return res.status(404).json({ message: "Lesson not found" });
-
-    res.json(result.value);
+    res.json({ message: "Spaces updated", lesson: result.value });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// ---------------- ORDERS (CONNECTED TO YOUR UI) ----------------
-
-// CREATE ORDER (this is what your frontend will call)
-app.post("/orders", async (req, res) => {
+// FILTER route - price range and location
+app.get("/lessons/filter", async (req, res) => {
   try {
-    const { name, phone, cart } = req.body;
+    const { minPrice, maxPrice, location, page = 1, limit = 20 } = req.query;
+    const query = {};
 
-    // validation
-    if (!name || !phone || !cart || cart.length === 0) {
-      return res.status(400).json({ message: "Invalid order" });
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = parseFloat(minPrice);
+      if (maxPrice) query.price.$lte = parseFloat(maxPrice);
     }
 
-    // build clean order
-    const order = {
-      name,
-      phone,
-      items: cart.map(item => ({
-        lessonId: item._id,
-        subject: item.subject,
-        price: item.price
-      })),
-      total: cart.reduce((sum, item) => sum + item.price, 0),
-      date: new Date()
-    };
+    if (location) {
+      const locList = location.split(",").map((x) => x.trim());
+      query.location = { $in: locList };
+    }
 
-    const result = await ordersCollection.insertOne(order);
+    const skip = (page - 1) * limit;
 
-    res.json({
-      message: "✅ Order saved",
-      orderId: result.insertedId
-    });
+    const lessons = await lessonsCollection
+      .find(query)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit))
+      .toArray();
 
+    res.json(lessons);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// GET orders (for testing)
-app.get("/orders", async (req, res) => {
+// Count route
+app.get("/lessons/count", async (req, res) => {
   try {
-    const orders = await ordersCollection.find().toArray();
-    res.json(orders);
+    const count = await lessonsCollection.countDocuments();
+    res.json({ total: count });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// ---------------- FRONTEND ----------------
+// ---------------- Frontend Routes ----------------
+
+// Homepage
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
+// Fallback route for SPA
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
-// ---------------- START ----------------
+// ---------------- Start Server ----------------
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
