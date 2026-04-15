@@ -7,102 +7,131 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ================= MONGODB =================
+// LOG ALL REQUESTS (VERY IMPORTANT)
+app.use((req, res, next) => {
+    console.log(`➡️ ${req.method} ${req.url}`);
+    next();
+});
+
+// ================= MONGO =================
 const uri =
   "mongodb+srv://gmuriithiwamwangi_db_user:Nyand2k27Grvn@cluster0.ql0owo1.mongodb.net/?retryWrites=true&w=majority";
 
 const client = new MongoClient(uri);
 
-let db;
-let lessonsCollection;
-let ordersCollection;
+let db, lessonsCollection, ordersCollection;
+let dbReady = false;
 
-// CONNECT DB (brighter_minds)
+// CONNECT DB SAFELY
 async function connectDB() {
-  await client.connect();
+    try {
+        await client.connect();
 
-  db = client.db("brighter_minds");
+        db = client.db("brighter_minds");
+        lessonsCollection = db.collection("lessons");
+        ordersCollection = db.collection("orders");
 
-  lessonsCollection = db.collection("lessons");
-  ordersCollection = db.collection("orders");
+        dbReady = true;
 
-  console.log("✅ Connected to MongoDB (brighter_minds)");
+        console.log("✅ MongoDB CONNECTED (brighter_minds)");
+    } catch (err) {
+        console.error("❌ DB CONNECTION ERROR:", err);
+    }
 }
 connectDB();
 
-// ================= LESSONS =================
+// BLOCK REQUESTS UNTIL DB READY
+function checkDB(req, res, next) {
+    if (!dbReady) {
+        return res.status(503).json({ error: "DB not ready yet" });
+    }
+    next();
+}
 
-// GET ALL LESSONS
-app.get("/lessons", async (req, res) => {
-  const lessons = await lessonsCollection.find().toArray();
-  res.json(lessons);
+// ================= ROUTES =================
+
+// TEST
+app.get("/test", (req, res) => {
+    res.json({ message: "Backend working" });
+});
+
+// LESSONS
+app.get("/lessons", checkDB, async (req, res) => {
+    const lessons = await lessonsCollection.find().toArray();
+    res.json(lessons);
 });
 
 // UPDATE SPACES
-app.patch("/lessons/:id/spaces", async (req, res) => {
-  try {
-    const { change } = req.body;
+app.patch("/lessons/:id/spaces", checkDB, async (req, res) => {
+    try {
+        const { change } = req.body;
 
-    const result = await lessonsCollection.findOneAndUpdate(
-      { _id: new ObjectId(req.params.id) },
-      { $inc: { spaces: Number(change) } },
-      { returnDocument: "after" }
-    );
+        const result = await lessonsCollection.findOneAndUpdate(
+            { _id: new ObjectId(req.params.id) },
+            { $inc: { spaces: Number(change) } },
+            { returnDocument: "after" }
+        );
 
-    res.json(result.value);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ================= ORDERS =================
-
-// CREATE ORDER (FIXED & CLEAN)
-app.post("/orders", async (req, res) => {
-  try {
-    const { name, phone, cart } = req.body;
-
-    if (!name || !phone || !cart || cart.length === 0) {
-      return res.status(400).json({ error: "Invalid order data" });
+        res.json(result.value);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    const order = {
-      name,
-      phone,
-      items: cart.map((i) => ({
-        lessonId: i._id,
-        subject: i.subject,
-        price: i.price,
-        quantity: i.quantity || 1,
-      })),
-      total: cart.reduce(
-        (sum, i) => sum + i.price * (i.quantity || 1),
-        0
-      ),
-      createdAt: new Date(),
-    };
-
-    const result = await ordersCollection.insertOne(order);
-
-    res.json({
-      message: "✅ Order saved successfully",
-      orderId: result.insertedId,
-    });
-  } catch (err) {
-    console.error("Order error:", err);
-    res.status(500).json({ error: err.message });
-  }
 });
 
-// GET ORDERS (TEST)
-app.get("/orders", async (req, res) => {
-  const orders = await ordersCollection.find().toArray();
-  res.json(orders);
+// ================= ORDERS (FIXED CORE ISSUE) =================
+
+app.post("/orders", checkDB, async (req, res) => {
+    try {
+        console.log("📦 ORDER BODY:", req.body);
+
+        const { name, phone, cart } = req.body;
+
+        if (!name || !phone || !Array.isArray(cart)) {
+            return res.status(400).json({
+                error: "Missing name, phone or cart is invalid"
+            });
+        }
+
+        const order = {
+            name,
+            phone,
+            items: cart.map(i => ({
+                lessonId: i._id,
+                subject: i.subject,
+                price: i.price,
+                quantity: i.quantity || 1
+            })),
+            total: cart.reduce(
+                (sum, i) => sum + i.price * (i.quantity || 1),
+                0
+            ),
+            createdAt: new Date()
+        };
+
+        const result = await ordersCollection.insertOne(order);
+
+        console.log("✅ ORDER SAVED:", result.insertedId);
+
+        res.json({
+            success: true,
+            orderId: result.insertedId
+        });
+
+    } catch (err) {
+        console.error("❌ ORDER ERROR:", err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// ================= START SERVER =================
+// GET ORDERS
+app.get("/orders", checkDB, async (req, res) => {
+    const orders = await ordersCollection.find().toArray();
+    res.json(orders);
+});
+
+// ================= START =================
 const PORT = process.env.PORT || 3030;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
